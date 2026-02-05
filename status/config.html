@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Config</title>
+<link rel="stylesheet" href="../styles.css">
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+</head>
+
+<body>
+
+<h2 style="text-align:center">Admin – Bestellungen</h2>
+
+<table>
+<tr>
+<th>Nr</th>
+<th>Produkte</th>
+<th>Total</th>
+<th>Status</th>
+<th>Aktion</th>
+</tr>
+<tbody id="list"></tbody>
+</table>
+
+<script>
+firebase.initializeApp({
+ databaseURL:"https://mcking-659b6-default-rtdb.europe-west1.firebasedatabase.app"
+});
+const db=firebase.database();
+
+db.ref("orders").on("value",snap=>{
+ list.innerHTML="";
+ snap.forEach(o=>{
+  const d=o.val();
+  list.innerHTML+=`
+  <tr>
+   <td>#${o.key}</td>
+   <td>${d.items.map(i=>i.name).join(", ")}</td>
+   <td>${d.totalFC} FC</td>
+   <td>${d.status}</td>
+   <td>
+    <button onclick="ready('${o.key}')">Abholbereit</button>
+    <button onclick="del('${o.key}')">Löschen</button>
+   </td>
+  </tr>`;
+ });
+});
+
+function ready(k){ db.ref("orders/"+k).update({status:"Abholbereit"}); }
+function del(k){ db.ref("orders/"+k).remove(); }
+</script>
+
+</body>
+</html>
