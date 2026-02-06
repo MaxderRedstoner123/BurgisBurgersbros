@@ -42,6 +42,9 @@
   <p id="msg" style="color:red;"></p>
 </div>
 
+<!-- AUDIO ELEMENT FÜR PING -->
+<audio id="pingSound" src="../ping.mp3" preload="auto"></audio>
+
 <h2 style="text-align:center">Bestellstatus</h2>
 
 <table>
@@ -80,13 +83,27 @@ firebase.initializeApp({
 });
 const db=firebase.database();
 
+// Variable zum Verfolgen der Bestellanzahl
+let previousOrderCount = 0;
+
 db.ref("orders").on("value",snap=>{
  prep.innerHTML=""; ready.innerHTML="";
+ let currentOrderCount = 0;
  snap.forEach(o=>{
   const d=o.val();
   const el=`<div>#${o.key}</div>`;
   d.status==="Abholbereit"?ready.innerHTML+=el:prep.innerHTML+=el;
+  currentOrderCount++;
  });
+
+ // Prüfe, ob eine neue Bestellung hinzugekommen ist
+ if (currentOrderCount > previousOrderCount) {
+  const pingSound = document.getElementById("pingSound");
+  pingSound.play().catch(e => console.log("Audio konnte nicht abgespielt werden:", e)); // Fallback für Browser-Beschränkungen
+ }
+
+ // Aktualisiere die vorherige Anzahl
+ previousOrderCount = currentOrderCount;
 });
 </script>
 
