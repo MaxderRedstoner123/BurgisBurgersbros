@@ -91,7 +91,7 @@ db.ref("orders").on("value",snap=>{
  let currentOrderCount = 0;
  snap.forEach(o=>{
   const d=o.val();
-  const el=`<div>#${o.key}</div>`;
+  const el=`<div>${o.key}</div>`;
   d.status==="Abholbereit"?ready.innerHTML+=el:prep.innerHTML+=el;
   currentOrderCount++;
  });

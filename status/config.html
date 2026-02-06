@@ -86,7 +86,7 @@ db.ref("orders").on("value",snap=>{
   const d=o.val();
   list.innerHTML+=`
   <tr>
-   <td>#${o.key}</td>
+   <td>${o.key}</td>
    <td>${d.items.map(i=>i.name).join(", ")}</td>
    <td>${d.totalFC} FC</td>
    <td>${d.status}</td>
