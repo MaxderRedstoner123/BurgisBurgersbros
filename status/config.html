@@ -6,9 +6,41 @@
 <link rel="stylesheet" href="../styles.css">
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<style>
+#lockscreen{
+  position:fixed;
+  inset:0;
+  background:#111;
+  color:white;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  z-index:999999;
+}
+#lockscreen input{
+  padding:10px;
+  font-size:16px;
+  margin-top:10px;
+}
+#lockscreen button{
+  padding:10px 20px;
+  margin-top:10px;
+  cursor:pointer;
+}
+</style>
 </head>
 
 <body>
+
+<!-- 🔒 LOCKSCREEN -->
+<div id="lockscreen">
+  <h2>🔒 Geschützter Bereich</h2>
+  <input type="password" id="pwInput" placeholder="Passwort">
+  <button id="loginBtn">Login</button>
+  <p id="msg" style="color:red;"></p>
+</div>
 
 <h2 style="text-align:center">Admin – Bestellungen</h2>
 
@@ -24,6 +56,25 @@
 </table>
 
 <script>
+// Verstecktes Passwort (Base64-kodiert: "changeme" -> "Y2hhbmdlbWU=")
+const hiddenPw = "Y2hhbmdlbWU=";
+const realPw = atob(hiddenPw);
+
+// LOCKSCREEN
+const lock = document.getElementById("lockscreen");
+const msg = document.getElementById("msg");
+document.body.style.overflow = "hidden";
+
+document.getElementById("loginBtn").onclick = () => {
+  const input = document.getElementById("pwInput").value;
+  if (input === realPw) {
+    lock.remove();
+    document.body.style.overflow = "auto";
+  } else {
+    msg.innerText = "Falsches Passwort";
+  }
+};
+
 firebase.initializeApp({
  databaseURL:"https://mcking-659b6-default-rtdb.europe-west1.firebasedatabase.app"
 });

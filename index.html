@@ -5,12 +5,42 @@
 <title>BurgisBurgersBros</title>
 <link rel="stylesheet" href="styles.css">
 
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<style>
+#lockscreen{
+  position:fixed;
+  inset:0;
+  background:#111;
+  color:white;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  z-index:999999;
+}
+#lockscreen input{
+  padding:10px;
+  font-size:16px;
+  margin-top:10px;
+}
+#lockscreen button{
+  padding:10px 20px;
+  margin-top:10px;
+  cursor:pointer;
+}
+</style>
 </head>
 
 <body>
 
+<!-- 🔒 LOCKSCREEN -->
+<div id="lockscreen">
+  <h2>🔒 Geschützter Bereich</h2>
+  <input type="password" id="pwInput" placeholder="Passwort">
+  <button id="loginBtn">Login</button>
+  <p id="msg" style="color:red;"></p>
+</div>
+
+<!-- ================= WEBSITE ================= -->
 <header>
 <nav>
 <h2>BurgisBurgersBros</h2>
@@ -31,126 +61,146 @@
 <button id="orderBtn">Bestellen</button>
 </section>
 
-<script>
-/* ================= FIREBASE ================= */
-firebase.initializeApp({
- databaseURL:"https://mcking-659b6-default-rtdb.europe-west1.firebasedatabase.app"
-});
-const db = firebase.database();
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+  import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
-/* ================= DOM ================= */
-const productsDiv = document.getElementById("products");
-const cartItemsEl = document.getElementById("cartItems");
-const totalEl = document.getElementById("total");
-const balanceEl = document.getElementById("balance");
-const orderBtn = document.getElementById("orderBtn");
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyBUH7HWWhA-cHllde7Yy0YNwnG34lawG6g",
+    authDomain: "mcking-659b6.firebaseapp.com",
+    databaseURL: "https://mcking-659b6-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "mcking-659b6",
+    storageBucket: "mcking-659b6.firebasestorage.app",
+    messagingSenderId: "1086112729985",
+    appId: "1:1086112729985:web:7deed0bbf08412d150b680"
+  };
 
-/* ================= WALLET ================= */
-db.ref("wallet/balance").on("value", snap => {
- if (!snap.exists()) {
-   db.ref("wallet").set({ balance: 500 });
-   balanceEl.textContent = 500;
- } else {
-   balanceEl.textContent = snap.val();
- }
-});
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
 
-/* ================= PRODUKTE (67+) ================= */
-const productNames = [
-"Cheeseburger","Hamburger","Bacon Burger","BBQ Burger","Chicken Burger",
-"Fish Burger","Veggie Burger","Tower Burger","Mega Burger","Classic Burger",
-"Vanilla Ice","Apple Pie","Brownie","Donut","Sundae","Milkshake",
-"Cola","Fanta","Sprite","Water","Iced Tea","Coffee",
-"Fries Small","Fries Medium","Fries Large","Curly Fries","Nuggets",
-"Onion Rings","Mozzarella","Hash Browns","Side Salad","Wrap",
-"Big Stack","Street Burger","Smoky Burger","Hot Burger","Urban Burger",
-"Midnight Burger","Cheese Deluxe","Grill Burger","Crispy Burger",
-"Cookie","Ice Cone","Churros","Cheese Sauce","Latte","Cappuccino",
-"Hot Chocolate","Orange Juice","Apple Juice","Milk","Cola Zero",
-"Nuggets 9","Nuggets 20","Fries XXL","Double Cheeseburger","Triple Burger",
-"BBQ Wrap","Chicken Box","Family Box"
-];
+  /* ================= PASSWORT SCHUTZ ================= */
+  const lock = document.getElementById("lockscreen");
+  const msg  = document.getElementById("msg");
 
-/* ================= WARENKORB ================= */
-let cart = [];
-let total = 0;
+  // Seite blockieren
+  document.body.style.overflow = "hidden";
 
-function renderCart() {
- cartItemsEl.innerHTML = "";
- cart.forEach(item => {
-   const li = document.createElement("li");
-   li.textContent = `${item.name} – ${item.price} FC`;
-   cartItemsEl.appendChild(li);
- });
- totalEl.textContent = total;
-}
+  // Verstecktes Passwort (Base64-kodiert: "changeme" -> "Y2hhbmdlbWU=")
+  const hiddenPw = "Y2hhbmdlbWU="; // Ändern Sie dies zu Ihrem eigenen Base64-kodierten Passwort
+  const realPw = atob(hiddenPw); // Dekodieren zur Laufzeit
 
-/* ================= PRODUKTE RENDERN ================= */
-productNames.forEach(name => {
- const price = Math.floor(Math.random() * 21) + 5;
- const div = document.createElement("div");
- div.className = "product";
- div.innerHTML = `
-   <h3>${name}</h3>
-   <p class="price">${price} FC</p>
-   <button>+</button>
- `;
- div.querySelector("button").addEventListener("click", () => {
-   cart.push({ name, price });
-   total += price;
-   renderCart();
- });
- productsDiv.appendChild(div);
-});
+  // LOGIN
+  document.getElementById("loginBtn").onclick = () => {
+    const input = document.getElementById("pwInput").value;
 
-/* ================= BESTELLEN ================= */
-orderBtn.addEventListener("click", () => {
- if (cart.length === 0) return alert("Warenkorb leer!");
+    if (input === realPw) {
+      // Lockscreen schließen und Seite freigeben
+      lock.remove();
+      document.body.style.overflow = "auto";
+    } else {
+      msg.innerText = "Falsches Passwort";
+    }
+  };
 
- db.ref("wallet/balance").once("value", snap => {
-   if (snap.val() < total) {
-     alert("Nicht genug Fluffycoins!");
-     return;
-   }
+  /* ================= WALLET ================= */
+  const balanceEl = document.getElementById("balance");
+  const balanceRef = ref(db, "wallet/balance");
+  onValue(balanceRef, snap => {
+    if (!snap.exists()) {
+      set(ref(db, "wallet"), { balance: 500 });
+      balanceEl.textContent = 500;
+    } else {
+      balanceEl.textContent = snap.val();
+    }
+  });
 
-   const orderNumber = Math.floor(100 + Math.random() * 900);
+  /* ================= PRODUKTE ================= */
+  const productNames = [
+  "Cheeseburger","Hamburger","Bacon Burger","BBQ Burger","Chicken Burger",
+  "Fish Burger","Veggie Burger","Tower Burger","Mega Burger","Classic Burger",
+  "Vanilla Ice","Apple Pie","Brownie","Donut","Sundae","Milkshake",
+  "Cola","Fanta","Sprite","Water","Iced Tea","Coffee",
+  "Fries Small","Fries Medium","Fries Large","Curly Fries","Nuggets",
+  "Onion Rings","Mozzarella","Hash Browns","Side Salad","Wrap",
+  "Big Stack","Street Burger","Smoky Burger","Hot Burger","Urban Burger",
+  "Midnight Burger","Cheese Deluxe","Grill Burger","Crispy Burger",
+  "Cookie","Ice Cone","Churros","Cheese Sauce","Latte","Cappuccino",
+  "Hot Chocolate","Orange Juice","Apple Juice","Milk","Cola Zero",
+  "Nuggets 9","Nuggets 20","Fries XXL","Double Cheeseburger","Triple Burger",
+  "BBQ Wrap","Chicken Box","Family Box"
+  ];
 
-   db.ref("orders/" + orderNumber).set({
-     items: cart,
-     totalFC: total,
-     status: "In Zubereitung",
-     npc: false
-   });
+  const productsDiv = document.getElementById("products");
+  const cartItemsEl = document.getElementById("cartItems");
+  const totalEl = document.getElementById("total");
+  const orderBtn = document.getElementById("orderBtn");
 
-   db.ref("wallet/balance").set(snap.val() - total);
+  let cart = [];
+  let total = 0;
 
-   cart = [];
-   total = 0;
-   renderCart();
- });
-});
+  function renderCart(){
+    cartItemsEl.innerHTML="";
+    cart.forEach(i=>{
+      const li=document.createElement("li");
+      li.textContent=`${i.name} – ${i.price} FC`;
+      cartItemsEl.appendChild(li);
+    });
+    totalEl.textContent=total;
+  }
 
-/* ================= NPC BESTELLUNGEN ================= */
-setInterval(() => {
- const orderNumber = Math.floor(100 + Math.random() * 900);
- const count = Math.floor(Math.random() * 4) + 1;
- let items = [];
- let sum = 0;
+  productNames.forEach(name=>{
+    const price=Math.floor(Math.random()*21)+5;
+    const div=document.createElement("div");
+    div.className="product";
+    div.innerHTML=`<h3>${name}</h3><p>${price} FC</p><button>+</button>`;
+    div.querySelector("button").onclick=()=>{
+      cart.push({name,price});
+      total+=price;
+      renderCart();
+    };
+    productsDiv.appendChild(div);
+  });
 
- for (let i = 0; i < count; i++) {
-   const name = productNames[Math.floor(Math.random() * productNames.length)];
-   const price = Math.floor(Math.random() * 21) + 5;
-   items.push({ name, price });
-   sum += price;
- }
+  /* ================= BESTELLEN ================= */
+  orderBtn.onclick=()=>{
+    if(cart.length===0) return;
 
- db.ref("orders/" + orderNumber).set({
-   items: items,
-   totalFC: sum,
-   status: "In Zubereitung",
-   npc: true
- });
-}, 45000);
+    get(ref(db, "wallet/balance")).then(snap=>{
+      if(snap.val()<total) return alert("Zu wenig Fluffycoins");
+
+      const nr=Math.floor(100+Math.random()*900);
+      set(ref(db, "orders/"+nr), {
+        items:cart,
+        totalFC:total,
+        status:"In Zubereitung",
+        npc:false
+      });
+
+      set(ref(db, "wallet/balance"), snap.val()-total);
+      cart=[]; total=0; renderCart();
+    });
+  };
+
+  /* ================= NPCs ================= */
+  setInterval(()=>{
+    const nr=Math.floor(100+Math.random()*900);
+    const count=Math.floor(Math.random()*4)+1;
+    let items=[], sum=0;
+
+    for(let i=0;i<count;i++){
+      const name=productNames[Math.floor(Math.random()*productNames.length)];
+      const price=Math.floor(Math.random()*21)+5;
+      items.push({name,price});
+      sum+=price;
+    }
+
+    set(ref(db, "orders/"+nr), {
+      items, totalFC:sum, status:"In Zubereitung", npc:true
+    });
+  },45000);
 </script>
 
 </body>
