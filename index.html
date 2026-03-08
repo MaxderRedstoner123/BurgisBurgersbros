@@ -119,18 +119,8 @@
 
   /* ================= PRODUKTE ================= */
   const productNames = [
-  "Cheeseburger","Hamburger","Bacon Burger","BBQ Burger","Chicken Burger",
-  "Fish Burger","Veggie Burger","Tower Burger","Mega Burger","Classic Burger",
-  "Vanilla Ice","Apple Pie","Brownie","Donut","Sundae","Milkshake",
-  "Cola","Fanta","Sprite","Water","Iced Tea","Coffee",
-  "Fries Small","Fries Medium","Fries Large","Curly Fries","Nuggets",
-  "Onion Rings","Mozzarella","Hash Browns","Side Salad","Wrap",
-  "Big Stack","Street Burger","Smoky Burger","Hot Burger","Urban Burger",
-  "Midnight Burger","Cheese Deluxe","Grill Burger","Crispy Burger",
-  "Cookie","Ice Cone","Churros","Cheese Sauce","Latte","Cappuccino",
-  "Hot Chocolate","Orange Juice","Apple Juice","Milk","Cola Zero",
-  "Nuggets 9","Nuggets 20","Fries XXL","Double Cheeseburger","Triple Burger",
-  "BBQ Wrap","Chicken Box","Family Box"
+  "Boing Schriftmuster","Strand","Waldweg","Katze spielt Gitarre","Hund",
+  "Scateboard Fahrer","Fußball Spieler","Rollschuh Fahrerin","Roboter","Tänzerin",
   ];
 
   const productsDiv = document.getElementById("products");
@@ -185,23 +175,28 @@
     });
   };
 
-  /* ================= NPCs ================= */
-  setInterval(()=>{
-    const nr=Math.floor(100+Math.random()*900);
-    const count=Math.floor(Math.random()*4)+1;
-    let items=[], sum=0;
+/* ================= NPCs ================= */
+setInterval(()=>{
+  const nr = Math.floor(100 + Math.random() * 900);
+  const count = 1; // NPC bestellt immer nur 1 Produkt
+  let items = [], sum = 0;
 
-    for(let i=0;i<count;i++){
-      const name=productNames[Math.floor(Math.random()*productNames.length)];
-      const price=Math.floor(Math.random()*21)+5;
-      items.push({name,price});
-      sum+=price;
-    }
+  for(let i = 0; i < count; i++){
+    const name = productNames[Math.floor(Math.random() * productNames.length)];
+    const price = Math.floor(Math.random() * 21) + 5;
 
-    set(ref(db, "orders/"+nr), {
-      items, totalFC:sum, status:"In Zubereitung", npc:true
-    });
-  },45000);
+    items.push({ name, price });
+    sum += price;
+  }
+
+  set(ref(db, "orders/" + nr), {
+    items,
+    totalFC: sum,
+    status: "In Zubereitung",
+    npc: true
+  });
+
+}, 300000); // 5 Minuten = 300000 ms
 </script>
 
 </body>
